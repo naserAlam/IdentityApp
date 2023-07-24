@@ -50,6 +50,16 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpGet("users/{code}")]
+        public async Task<IActionResult> GetUserByCode(int code)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Code == code);
+            if (user == null) return NotFound();
+
+            return Ok(user);
+        }
+
+        [Authorize]
         [HttpGet("refresh-user-token")]
         public async Task<ActionResult<UserDto>> RefreshUserToken()
         {

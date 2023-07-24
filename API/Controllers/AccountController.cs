@@ -27,6 +27,15 @@ namespace API.Controllers
         }
 
         [Authorize]
+        [HttpGet("users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _userManager.Users.ToListAsync();
+            return Ok(users);
+        }
+
+
+        [Authorize]
         [HttpGet("refresh-user-token")]
         public async Task<ActionResult<UserDto>> RefreshUserToken()
         {
@@ -58,8 +67,8 @@ namespace API.Controllers
                 LastName = registerDto.LastName.ToLower(),
                 UserName = registerDto.Email.ToLower(),
                 Email = registerDto.Email.ToLower(),
-                EmailConfirmed = true
-
+                EmailConfirmed = true,
+                LockoutEnabled = false
             };
 
             var result = await _userManager.CreateAsync(userToAdd, registerDto.Password);

@@ -53,7 +53,6 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Key"])),
             ValidIssuer = builder.Configuration["JWT:Issuer"],
             ValidateIssuer = true,
-            // Using symetric key - audience not validated
             ValidateAudience = false
         };
     });

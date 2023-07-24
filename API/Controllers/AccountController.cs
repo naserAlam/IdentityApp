@@ -61,12 +61,20 @@ namespace API.Controllers
             if (await CheckEmailExistsAsync(registerDto.Email))
                 return BadRequest($"{registerDto.Email} already Exists!");
 
+            var lastUserCode = await _userManager.Users
+                .OrderByDescending(u => u.Code)
+                .Select(u => u.Code)
+                .FirstOrDefaultAsync();
+
+            int newCode = lastUserCode + 1;
+
             var userToAdd = new User
             {
                 FirstName = registerDto.FirstName.ToLower(),
                 LastName = registerDto.LastName.ToLower(),
                 UserName = registerDto.Email.ToLower(),
                 Email = registerDto.Email.ToLower(),
+                Code = newCode,
                 EmailConfirmed = true,
                 LockoutEnabled = false
             };

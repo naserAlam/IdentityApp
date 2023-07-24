@@ -28,12 +28,26 @@ namespace API.Controllers
 
         [Authorize]
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUsers()
+        public async Task<IActionResult> GetAllUsers(int pageNumber = 1, int pageSize = 10)
         {
-            var users = await _userManager.Users.ToListAsync();
-            return Ok(users);
-        }
+            int itemsToSkip = (pageNumber - 1) * pageSize;
+            int totalUsersCount = await _userManager.Users.CountAsync();
 
+            var users = await _userManager.Users
+                .Skip(itemsToSkip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var response = new
+            {
+                TotalCount = totalUsersCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                Data = users
+            };
+
+            return Ok(response);
+        }
 
         [Authorize]
         [HttpGet("refresh-user-token")]

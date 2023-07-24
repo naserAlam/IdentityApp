@@ -27,7 +27,7 @@ namespace API.Services
                 new Claim(ClaimTypes.Surname, user.LastName),
             };
 
-            var credentials = new SigningCredentials(_jwtkey, SecurityAlgorithms.HmacSha512Signature);
+            var credentials = new SigningCredentials(_jwtkey, SecurityAlgorithms.HmacSha256Signature);
             var tokenDescriptor = new SecurityTokenDescriptor
             {
                 Subject = new ClaimsIdentity(userCLaims),

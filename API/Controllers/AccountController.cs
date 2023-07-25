@@ -1,5 +1,6 @@
 ﻿using API.DTOs.Account;
 using API.Models;
+using API.Repositories;
 using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -16,14 +17,17 @@ namespace API.Controllers
         private readonly JWTService _jWTService;
         private readonly SignInManager<User> _signInManager;
         private readonly UserManager<User> _userManager;
+        private readonly IUserRepository _userRepository;
 
         public AccountController(JWTService jwtService,
             SignInManager<User> signInManager,
-            UserManager<User> userManager)
+            UserManager<User> userManager,
+            IUserRepository userRepository)
         {
             _jWTService = jwtService;
             _signInManager = signInManager;
             _userManager = userManager;
+            _userRepository = userRepository;
         }
 
         [Authorize]
@@ -31,12 +35,9 @@ namespace API.Controllers
         public async Task<IActionResult> GetAllUsers(int pageNumber = 1, int pageSize = 10)
         {
             int itemsToSkip = (pageNumber - 1) * pageSize;
-            int totalUsersCount = await _userManager.Users.CountAsync();
+            int totalUsersCount = await _userRepository.GetTotalUsersCountAsync();
 
-            var users = await _userManager.Users
-                .Skip(itemsToSkip)
-                .Take(pageSize)
-                .ToListAsync();
+            var users = await _userRepository.GetPagedUsersAsync(pageNumber, pageSize);
 
             var response = new
             {
@@ -53,8 +54,9 @@ namespace API.Controllers
         [HttpGet("users/{code}")]
         public async Task<IActionResult> GetUserByCode(int code)
         {
-            var user = await _userManager.Users.FirstOrDefaultAsync(x => x.Code == code);
-            if (user == null) return NotFound();
+            var user = await _userRepository.GetUserByCodeAsync(code);
+            if (user == null)
+                return NotFound();
 
             return Ok(user);
         }
@@ -63,18 +65,20 @@ namespace API.Controllers
         [HttpGet("refresh-user-token")]
         public async Task<ActionResult<UserDto>> RefreshUserToken()
         {
-            var user = await _userManager.FindByNameAsync(User.FindFirst(ClaimTypes.Email)?.Value);
+            var user = await _userRepository.GetUserByEmailAsync(User.FindFirst(ClaimTypes.Email)?.Value);
             return CreateApplicationUserDto(user);
         }
 
         [HttpPost("login")]
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
-            var user = await _userManager.FindByNameAsync(loginDto.UserName);
-            if (user == null) return Unauthorized("Invalid username or password");
+            var user = await _userRepository.GetUserByEmailAsync(loginDto.UserName);
+            if (user == null) 
+                return Unauthorized("Invalid username or password");
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-            if (!result.Succeeded) return Unauthorized("Invalid username or password");
+            if (!result.Succeeded) 
+                return Unauthorized("Invalid username or password");
 
             return CreateApplicationUserDto(user);
         }
@@ -82,14 +86,10 @@ namespace API.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto registerDto)
         {
-            if (await CheckEmailExistsAsync(registerDto.Email))
+            if (await _userRepository.CheckEmailExistsAsync(registerDto.Email))
                 return BadRequest($"{registerDto.Email} already Exists!");
 
-            var lastUserCode = await _userManager.Users
-                .OrderByDescending(u => u.Code)
-                .Select(u => u.Code)
-                .FirstOrDefaultAsync();
-
+            var lastUserCode = await _userRepository.GetLastUserCodeAsync();
             int newCode = lastUserCode + 1;
 
             var userToAdd = new User
@@ -103,7 +103,7 @@ namespace API.Controllers
                 LockoutEnabled = false
             };
 
-            var result = await _userManager.CreateAsync(userToAdd, registerDto.Password);
+            var result = await _userRepository.CreateUserAsync(userToAdd, registerDto.Password);
             if (!result.Succeeded) return BadRequest(result.Errors);
 
             return Ok("Account created successfully");
@@ -118,10 +118,6 @@ namespace API.Controllers
                 LastName = user.LastName,
                 JWT = _jWTService.CreateJWT(user),
             };
-        }
-        private async Task<bool> CheckEmailExistsAsync(string email)
-        {
-            return await _userManager.Users.AnyAsync(x => x.Email == email.ToLower());
         }
         #endregion
     }

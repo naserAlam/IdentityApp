@@ -5,7 +5,6 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace API.Controllers
@@ -21,12 +20,10 @@ namespace API.Controllers
 
         public AccountController(JWTService jwtService,
             SignInManager<User> signInManager,
-            UserManager<User> userManager,
             IUserRepository userRepository)
         {
             _jWTService = jwtService;
             _signInManager = signInManager;
-            _userManager = userManager;
             _userRepository = userRepository;
         }
 
@@ -73,11 +70,11 @@ namespace API.Controllers
         public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
         {
             var user = await _userRepository.GetUserByEmailAsync(loginDto.UserName);
-            if (user == null) 
+            if (user == null)
                 return Unauthorized("Invalid username or password");
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
-            if (!result.Succeeded) 
+            if (!result.Succeeded)
                 return Unauthorized("Invalid username or password");
 
             return CreateApplicationUserDto(user);

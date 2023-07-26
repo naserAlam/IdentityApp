@@ -13,16 +13,15 @@ namespace API.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly JWTService _jWTService;
+        private readonly JWTService _jwtService;
         private readonly SignInManager<User> _signInManager;
-        private readonly UserManager<User> _userManager;
         private readonly IUserRepository _userRepository;
 
         public AccountController(JWTService jwtService,
             SignInManager<User> signInManager,
             IUserRepository userRepository)
         {
-            _jWTService = jwtService;
+            _jwtService = jwtService;
             _signInManager = signInManager;
             _userRepository = userRepository;
         }
@@ -113,7 +112,7 @@ namespace API.Controllers
             {
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                JWT = _jWTService.CreateJWT(user),
+                JWT = _jwtService.CreateJWT(user),
             };
         }
         #endregion

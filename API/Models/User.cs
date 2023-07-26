@@ -5,6 +5,21 @@ namespace API.Models
 {
     public class User : IdentityUser
     {
+        public User(
+            int code,
+            string firstName,
+            string lastName,
+            string userName,
+            string email,
+            bool emailConfirmed)
+        {
+            Code = code;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            UserName = userName;
+            EmailConfirmed = emailConfirmed;
+        }
         [Required]
         public string FirstName { get; set; }
         [Required]

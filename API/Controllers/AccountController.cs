@@ -1,8 +1,10 @@
 ﻿using API.DTOs.Account;
 using API.HelperModels;
 using API.Models;
+using API.Queries;
 using API.Repositories;
 using API.Services;
+using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,32 +19,25 @@ namespace API.Controllers
         private readonly JWTService _jwtService;
         private readonly SignInManager<User> _signInManager;
         private readonly IUserRepository _userRepository;
+        private readonly IMediator _mediator;
 
         public AccountController(JWTService jwtService,
             SignInManager<User> signInManager,
-            IUserRepository userRepository)
+            IUserRepository userRepository,
+            IMediator mediator)
         {
             _jwtService = jwtService;
             _signInManager = signInManager;
             _userRepository = userRepository;
+            _mediator = mediator;
         }
 
         [Authorize]
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(int pageNumber = 1, int pageSize = 10)
         {
-            int totalUsersCount = await _userRepository.GetTotalUsersCountAsync();
-
-            var users = await _userRepository.GetPagedUsersAsync(pageNumber, pageSize);
-
-            var response = new
-            {
-                TotalCount = totalUsersCount,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                Data = users
-            };
-
+            var query = new GetAllUsersQuery(pageNumber, pageSize);
+            var response = await _mediator.Send(query);
             return Ok(response);
         }
 

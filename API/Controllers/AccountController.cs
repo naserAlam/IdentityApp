@@ -66,13 +66,13 @@ namespace API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(LoginDto loginDto)
+        public async Task<ActionResult<UserDto>> Login(LoginRequest loginRequest)
         {
-            var user = await _userRepository.GetUserByEmailAsync(loginDto.UserName);
+            var user = await _userRepository.GetUserByEmailAsync(loginRequest.UserName);
             if (user == null)
                 return Unauthorized("Invalid username or password");
 
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
             if (!result.Succeeded)
                 return Unauthorized("Invalid username or password");
 
@@ -80,26 +80,26 @@ namespace API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto registerDto)
+        public async Task<IActionResult> Register(RegistrationRequest registrationRequest)
         {
-            if (await _userRepository.CheckEmailExistsAsync(registerDto.Email))
-                return BadRequest($"{registerDto.Email} already Exists!");
+            if (await _userRepository.CheckEmailExistsAsync(registrationRequest.Email))
+                return BadRequest($"{registrationRequest.Email} already Exists!");
 
             var lastUserCode = await _userRepository.GetLastUserCodeAsync();
             int newCode = lastUserCode + 1;
 
             var userToAdd = new User
             {
-                FirstName = registerDto.FirstName.ToLower(),
-                LastName = registerDto.LastName.ToLower(),
-                UserName = registerDto.Email.ToLower(),
-                Email = registerDto.Email.ToLower(),
+                FirstName = registrationRequest.FirstName.ToLower(),
+                LastName = registrationRequest.LastName.ToLower(),
+                UserName = registrationRequest.Email.ToLower(),
+                Email = registrationRequest.Email.ToLower(),
                 Code = newCode,
                 EmailConfirmed = true,
                 LockoutEnabled = false
             };
 
-            var result = await _userRepository.CreateUserAsync(userToAdd, registerDto.Password);
+            var result = await _userRepository.CreateUserAsync(userToAdd, registrationRequest.Password);
             if (!result.Succeeded) return BadRequest(result.Errors);
 
             return Ok("Account created successfully");

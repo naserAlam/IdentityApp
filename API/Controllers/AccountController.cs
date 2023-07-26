@@ -31,7 +31,6 @@ namespace API.Controllers
         [HttpGet("users")]
         public async Task<IActionResult> GetAllUsers(int pageNumber = 1, int pageSize = 10)
         {
-            int itemsToSkip = (pageNumber - 1) * pageSize;
             int totalUsersCount = await _userRepository.GetTotalUsersCountAsync();
 
             var users = await _userRepository.GetPagedUsersAsync(pageNumber, pageSize);
@@ -89,16 +88,12 @@ namespace API.Controllers
             var lastUserCode = await _userRepository.GetLastUserCodeAsync();
             int newCode = lastUserCode + 1;
 
-            var userToAdd = new User
-            {
-                FirstName = registrationRequest.FirstName.ToLower(),
-                LastName = registrationRequest.LastName.ToLower(),
-                UserName = registrationRequest.Email.ToLower(),
-                Email = registrationRequest.Email.ToLower(),
-                Code = newCode,
-                EmailConfirmed = true,
-                LockoutEnabled = false
-            };
+            var userToAdd = new User(newCode,
+                                     registrationRequest.FirstName.ToLower(),
+                                     registrationRequest.LastName.ToLower(),
+                                     registrationRequest.Email.ToLower(),
+                                     registrationRequest.Email.ToLower(),
+                                     true);
 
             var result = await _userRepository.CreateUserAsync(userToAdd, registrationRequest.Password);
             if (!result.Succeeded) return BadRequest(result.Errors);

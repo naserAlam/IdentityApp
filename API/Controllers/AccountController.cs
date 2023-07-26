@@ -45,11 +45,9 @@ namespace API.Controllers
         [HttpGet("users/{code}")]
         public async Task<IActionResult> GetUserByCode(int code)
         {
-            var user = await _userRepository.GetUserByCodeAsync(code);
-            if (user == null)
-                return NotFound();
-
-            return Ok(user);
+            var response = await _mediator.Send(new GetUserByCodeQuery(code));
+            if (response == null) return NotFound();
+            return Ok(response);
         }
 
         [Authorize]

@@ -54,8 +54,13 @@ namespace API.Controllers
         [HttpGet("refresh-user-token")]
         public async Task<ActionResult<UserDto>> RefreshUserToken()
         {
-            var user = await _userRepository.GetUserByEmailAsync(User.FindFirst(ClaimTypes.Email)?.Value);
-            return CreateApplicationUserDto(user);
+            // Get the logged-in user's email from the claim
+            var email = User.FindFirst(ClaimTypes.Email)?.Value;
+
+            var query = new RefreshUserTokenQuery(email);
+            var userDto = await _mediator.Send(query);
+
+            return userDto;
         }
 
         [HttpPost("login")]

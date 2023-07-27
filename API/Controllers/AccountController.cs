@@ -1,5 +1,5 @@
-﻿using API.DTOs.Account;
-using API.HelperModels;
+﻿using API.Commands;
+using API.DTOs.Account;
 using API.Models;
 using API.Queries;
 using API.Repositories;
@@ -73,23 +73,10 @@ namespace API.Controllers
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegistrationRequest registrationRequest)
+        public async Task<IActionResult> Register(RegistrationRequestDto registrationRequest)
         {
-            if (await _userRepository.CheckEmailExistsAsync(registrationRequest.Email))
-                return BadRequest($"{registrationRequest.Email} already Exists!");
-
-            var lastUserCode = await _userRepository.GetLastUserCodeAsync();
-            int newCode = lastUserCode + 1;
-
-            var userToAdd = new User(newCode,
-                                     registrationRequest.FirstName.ToLower(),
-                                     registrationRequest.LastName.ToLower(),
-                                     registrationRequest.Email.ToLower(),
-                                     registrationRequest.Email.ToLower(),
-                                     true);
-
-            var result = await _userRepository.CreateUserAsync(userToAdd, registrationRequest.Password);
-            if (!result.Succeeded) return BadRequest(result.Errors);
+            bool isRegistered = await _mediator.Send(new RegisterUserCommand(registrationRequest));
+            if (!isRegistered) return BadRequest($"{registrationRequest.Email} already exists");
 
             return Ok("Account created successfully");
         }

@@ -64,17 +64,12 @@ namespace API.Controllers
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<UserDto>> Login(LoginRequest loginRequest)
+        public async Task<ActionResult<UserDto>> Login(LoginRequestDto loginRequest)
         {
-            var user = await _userRepository.GetUserByEmailAsync(loginRequest.UserName);
-            if (user == null)
+            var userDto = await _mediator.Send(new LoginQuery(loginRequest));
+            if (userDto == null)
                 return Unauthorized("Invalid username or password");
-
-            var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, false);
-            if (!result.Succeeded)
-                return Unauthorized("Invalid username or password");
-
-            return CreateApplicationUserDto(user);
+            return Ok(userDto);
         }
 
         [HttpPost("register")]

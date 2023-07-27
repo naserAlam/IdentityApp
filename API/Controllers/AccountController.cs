@@ -1,12 +1,8 @@
 ﻿using API.Commands;
 using API.DTOs.Account;
-using API.Models;
 using API.Queries;
-using API.Repositories;
-using API.Services;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
@@ -16,19 +12,10 @@ namespace API.Controllers
     [ApiController]
     public class AccountController : ControllerBase
     {
-        private readonly JWTService _jwtService;
-        private readonly SignInManager<User> _signInManager;
-        private readonly IUserRepository _userRepository;
         private readonly IMediator _mediator;
 
-        public AccountController(JWTService jwtService,
-            SignInManager<User> signInManager,
-            IUserRepository userRepository,
-            IMediator mediator)
+        public AccountController(IMediator mediator)
         {
-            _jwtService = jwtService;
-            _signInManager = signInManager;
-            _userRepository = userRepository;
             _mediator = mediator;
         }
 
@@ -80,17 +67,5 @@ namespace API.Controllers
 
             return Ok("Account created successfully");
         }
-
-        #region Helper Methods
-        private UserDto CreateApplicationUserDto(User user)
-        {
-            return new UserDto
-            {
-                FirstName = user.FirstName,
-                LastName = user.LastName,
-                JWT = _jwtService.CreateJWT(user),
-            };
-        }
-        #endregion
     }
 }

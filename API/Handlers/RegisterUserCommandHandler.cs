@@ -1,7 +1,6 @@
 ﻿using API.Commands;
 using API.Models;
 using API.Repositories;
-using API.Services;
 using MediatR;
 
 namespace API.Handlers
@@ -9,12 +8,10 @@ namespace API.Handlers
     public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, bool>
     {
         private readonly IUserRepository _userRepository;
-        private readonly JWTService _jWTService;
 
-        public RegisterUserCommandHandler(IUserRepository userRepository, JWTService jWTService)
+        public RegisterUserCommandHandler(IUserRepository userRepository)
         {
             _userRepository = userRepository;
-            _jWTService = jWTService;
         }
         public async Task<bool> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
         {
